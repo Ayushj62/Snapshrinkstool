@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
 import { PDFDocument } from 'pdf-lib';
 import { saveAs } from 'file-saver';
-import { FiUpload, FiDownload, FiX, FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import { FiUpload, FiX, FiArrowUp, FiArrowDown } from 'react-icons/fi';
 
 interface ImageFile {
   file: File;
@@ -182,7 +182,7 @@ const JpgToPdf = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
       className="container-custom py-10"
-      onUnmount={cleanUp}
+      onAnimationComplete={cleanUp}
     >
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold mb-4">JPG to PDF Converter</h1>

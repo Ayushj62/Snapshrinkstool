@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
 import { PDFDocument } from 'pdf-lib';
 import { saveAs } from 'file-saver';
-import { FiUpload, FiDownload, FiX, FiArrowUp, FiArrowDown, FiFile } from 'react-icons/fi';
+import { FiUpload, FiX, FiArrowUp, FiArrowDown, FiFile } from 'react-icons/fi';
 
 interface PdfFile {
   file: File;

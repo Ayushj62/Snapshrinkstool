@@ -1,9 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
 import { PDFDocument } from 'pdf-lib';
 import { saveAs } from 'file-saver';
 import { FiUpload, FiDownload, FiFile, FiZap } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
+import DataConsentDialog from '../components/DataConsentDialog';
+import { collectUserData } from '../services/dataCollection';
+
+// Maximum file size for processing: 50MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 const PdfCompressor = () => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -14,6 +20,18 @@ const PdfCompressor = () => {
   const [compressionLevel, setCompressionLevel] = useState<'low' | 'medium' | 'high'>('medium');
   const [originalSize, setOriginalSize] = useState<number>(0);
   const [compressedSize, setCompressedSize] = useState<number>(0);
+  const [showConsentDialog, setShowConsentDialog] = useState<boolean>(false);
+
+  // Clean up any blob URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      // Cleanup function
+      if (compressedPdf && compressedPdf instanceof Blob) {
+        // If we created any object URLs, revoke them
+        URL.revokeObjectURL(URL.createObjectURL(compressedPdf));
+      }
+    };
+  }, [compressedPdf]);
 
   // Handle file drop
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -31,10 +49,30 @@ const PdfCompressor = () => {
       setError('Please upload a PDF file');
       return;
     }
+
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`File size exceeds the maximum limit of ${formatFileSize(MAX_FILE_SIZE)}`);
+      return;
+    }
     
     setPdfFile(file);
     setOriginalSize(file.size);
+    setShowConsentDialog(true);
   }, []);
+
+  // Handle consent
+  const handleConsent = (accepted: boolean) => {
+    if (accepted && pdfFile) {
+      collectUserData({
+        fileName: pdfFile.name,
+        fileType: pdfFile.type,
+        fileSize: pdfFile.size,
+        toolUsed: 'pdf-compressor'
+      }, true);
+    }
+    setShowConsentDialog(false);
+  };
   
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -44,7 +82,7 @@ const PdfCompressor = () => {
     maxFiles: 1
   });
 
-  // Compress PDF
+  // Compress PDF with improved error handling and progress updates
   const compressPdf = async () => {
     if (!pdfFile) {
       setError('Please upload a PDF file');
@@ -52,29 +90,44 @@ const PdfCompressor = () => {
     }
     
     setIsCompressing(true);
-    setProgress(0);
+    setProgress(10);
     setError(null);
     
     try {
-      // Read the PDF file
+      // Read the file
+      setProgress(20);
       const pdfBytes = await readFileAsArrayBuffer(pdfFile);
       
       // Load the PDF document
-      const pdfDoc = await PDFDocument.load(pdfBytes);
+      setProgress(40);
+      let pdfDoc;
+      try {
+        pdfDoc = await PDFDocument.load(pdfBytes, {
+          updateMetadata: false, // Skip metadata updates which can cause errors
+          ignoreEncryption: true, // Try to open encrypted documents 
+        });
+      } catch (err) {
+        console.error('Error loading PDF:', err);
+        throw new Error('Could not read the PDF file. It may be corrupted or encrypted.');
+      }
       
-      // Update progress
-      setProgress(30);
-      
-      // Get compression options based on selected level
-      const options = getCompressionOptions(compressionLevel);
-      
-      // Compress the PDF
-      const compressedPdfBytes = await pdfDoc.save(options);
-      
-      // Update progress
-      setProgress(90);
+      // Compress the PDF with compression level settings
+      setProgress(60);
+      let compressedPdfBytes;
+      try {
+        compressedPdfBytes = await pdfDoc.save({
+          useObjectStreams: compressionLevel === 'high',
+          addDefaultPage: false,
+          objectsPerTick: compressionLevel === 'low' ? 20 : compressionLevel === 'medium' ? 50 : 100,
+          updateFieldAppearances: false
+        });
+      } catch (err) {
+        console.error('Error saving PDF:', err);
+        throw new Error('Failed to compress the PDF. The file might be incompatible or damaged.');
+      }
       
       // Create blob from compressed PDF
+      setProgress(80);
       const compressedPdfBlob = new Blob([compressedPdfBytes], { type: 'application/pdf' });
       setCompressedPdf(compressedPdfBlob);
       setCompressedSize(compressedPdfBlob.size);
@@ -85,49 +138,44 @@ const PdfCompressor = () => {
       if (compressedPdfBlob.size >= pdfFile.size) {
         setError('The file could not be compressed further. It may already be optimized.');
       }
-    } catch (err) {
-      console.error(err);
-      setError('An error occurred while compressing the PDF. Make sure it is a valid PDF document.');
+    } catch (err: any) {
+      console.error('PDF compression error:', err);
+      setError(err.message || 'An error occurred while compressing the PDF. Make sure it is a valid PDF document.');
+      setCompressedPdf(null);
+      setCompressedSize(0);
     } finally {
       setIsCompressing(false);
     }
   };
 
-  // Get compression options based on level
-  const getCompressionOptions = (level: 'low' | 'medium' | 'high'): { compress: boolean, objectFormat: 'ascii' | 'binary' } => {
-    const options = { compress: true, objectFormat: 'binary' as 'ascii' | 'binary' };
-    
-    // In a real implementation, these options would do more
-    // pdf-lib's compression options are limited, but in a production app
-    // you might use a dedicated PDF compression library/API
-    switch (level) {
-      case 'low':
-        options.compress = true;
-        options.objectFormat = 'ascii';
-        break;
-      case 'medium':
-        options.compress = true;
-        options.objectFormat = 'binary';
-        break;
-      case 'high':
-        options.compress = true;
-        options.objectFormat = 'binary';
-        break;
-      default:
-        options.compress = true;
-        options.objectFormat = 'binary';
-    }
-    
-    return options;
-  };
-
-  // Helper function to read file as ArrayBuffer
+  // Helper function to read file as ArrayBuffer with better error handling
   const readFileAsArrayBuffer = (file: File): Promise<ArrayBuffer> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as ArrayBuffer);
-      reader.onerror = reject;
-      reader.readAsArrayBuffer(file);
+      
+      // Set up error handling
+      reader.onerror = () => {
+        reject(new Error('Failed to read the file. Please try again with a different file.'));
+      };
+      
+      reader.onabort = () => {
+        reject(new Error('File reading was aborted. Please try again.'));
+      };
+      
+      reader.onload = () => {
+        if (reader.result instanceof ArrayBuffer) {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to convert file to the required format.'));
+        }
+      };
+      
+      // Start reading the file
+      try {
+        reader.readAsArrayBuffer(file);
+      } catch (error) {
+        reject(new Error('Could not read the file. The file might be corrupted.'));
+      }
     });
   };
 
@@ -149,12 +197,28 @@ const PdfCompressor = () => {
     return Math.round(percentage * 10) / 10; // Round to 1 decimal place
   };
 
-  // Download compressed PDF
+  // Download compressed PDF with error handling
   const downloadCompressedPdf = () => {
     if (!compressedPdf || !pdfFile) return;
     
-    const fileName = pdfFile.name.replace('.pdf', '-compressed.pdf');
-    saveAs(compressedPdf, fileName);
+    try {
+      const fileName = pdfFile.name.replace('.pdf', '-compressed.pdf');
+      saveAs(compressedPdf, fileName);
+    } catch (err) {
+      console.error('Error downloading file:', err);
+      setError('Failed to download the compressed PDF. Please try again.');
+    }
+  };
+
+  // Reset the component state
+  const resetState = () => {
+    setPdfFile(null);
+    setCompressedPdf(null);
+    setOriginalSize(0);
+    setCompressedSize(0);
+    setError(null);
+    setProgress(0);
+    setIsCompressing(false);
   };
 
   return (
@@ -165,6 +229,12 @@ const PdfCompressor = () => {
       transition={{ duration: 0.5 }}
       className="container-custom py-10"
     >
+      <DataConsentDialog
+        isOpen={showConsentDialog}
+        onAccept={() => handleConsent(true)}
+        onDecline={() => handleConsent(false)}
+      />
+      
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold mb-4">PDF Compressor</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
@@ -189,7 +259,10 @@ const PdfCompressor = () => {
                 Drag & drop a PDF file here, or click to select
               </p>
               <p className="text-sm text-gray-500">
-                Only PDF files are supported
+                Only PDF files are supported (max {formatFileSize(MAX_FILE_SIZE)})
+              </p>
+              <p className="text-xs text-gray-400 mt-2">
+                Processing is done entirely in your browser. Your files are never uploaded to a server.
               </p>
             </div>
           ) : (
@@ -197,12 +270,7 @@ const PdfCompressor = () => {
               <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
                 <h3 className="font-medium">Selected PDF</h3>
                 <button 
-                  onClick={() => {
-                    setPdfFile(null);
-                    setCompressedPdf(null);
-                    setOriginalSize(0);
-                    setCompressedSize(0);
-                  }}
+                  onClick={resetState}
                   className="text-sm text-gray-500 hover:text-gray-700"
                 >
                   Change file
@@ -280,7 +348,7 @@ const PdfCompressor = () => {
           )}
 
           {/* Compress button */}
-          {pdfFile && (
+          {pdfFile && !isCompressing && !compressedPdf && (
             <button
               onClick={compressPdf}
               disabled={isCompressing}
@@ -289,6 +357,16 @@ const PdfCompressor = () => {
               }`}
             >
               {isCompressing ? 'Compressing...' : 'Compress PDF'}
+            </button>
+          )}
+
+          {/* Try again button if there was an error */}
+          {error && pdfFile && !isCompressing && (
+            <button
+              onClick={compressPdf}
+              className="w-full mt-4 py-3 px-4 rounded-md font-medium text-white bg-secondary-600 hover:bg-secondary-700"
+            >
+              Try Again
             </button>
           )}
 

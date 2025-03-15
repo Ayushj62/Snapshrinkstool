@@ -124,10 +124,10 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors inline-flex items-center">
+                <Link to="/privacy-policy" className="text-gray-400 hover:text-primary-400 transition-colors inline-flex items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-500/50 mr-2"></span>
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors inline-flex items-center">

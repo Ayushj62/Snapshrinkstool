@@ -2,8 +2,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
 import { FiUpload, FiDownload, FiMaximize, FiMinimize, FiX } from 'react-icons/fi';
-import imageCompression from 'browser-image-compression';
 import Resizer from 'react-image-file-resizer';
+import { Link } from 'react-router-dom';
 
 const ImageResizer = () => {
   const [image, setImage] = useState<File | null>(null);
@@ -252,7 +252,14 @@ const ImageResizer = () => {
                 Drag & drop an image here, or click to select
               </p>
               <p className="text-sm text-gray-500">
-                Supports JPG, PNG, WEBP and GIF files
+                Supported formats: JPG, PNG, WebP
+              </p>
+              <p className="text-xs text-gray-400 mt-2">
+                By uploading a file, you agree to our{' '}
+                <Link to="/privacy-policy" className="text-primary-600 hover:text-primary-700">
+                  Privacy Policy
+                </Link>
+                {' '}regarding data collection and processing.
               </p>
             </div>
           ) : (

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { FiGithub, FiTwitter, FiLinkedin, FiMail, FiSend } from 'react-icons/fi';
+import { motion } from 'framer-motion';
+import { FiGithub, FiTwitter, FiLinkedin, FiSend } from 'react-icons/fi';
 import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -8,24 +8,15 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const Contact = () => {
-  const [isTyping, setIsTyping] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     message: ''
   });
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const particlesRef = useRef<THREE.Points | null>(null);
-
-  // Mouse movement tracking
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const smoothX = useSpring(mouseX, { damping: 20, stiffness: 300 });
-  const smoothY = useSpring(mouseY, { damping: 20, stiffness: 300 });
 
   // Initialize Three.js scene
   useEffect(() => {
@@ -99,13 +90,6 @@ const Contact = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Mouse move handler
-  const handleMouseMove = (e: React.MouseEvent) => {
-    mouseX.set(e.clientX);
-    mouseY.set(e.clientY);
-    setCursorPosition({ x: e.clientX, y: e.clientY });
-  };
-
   // Form submission handler
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,22 +100,11 @@ const Contact = () => {
   return (
     <div 
       className="min-h-screen bg-[#0a0a1a] text-white overflow-hidden relative"
-      onMouseMove={handleMouseMove}
     >
       {/* Canvas background */}
       <canvas 
         ref={canvasRef}
         className="fixed inset-0 w-full h-full z-0"
-      />
-
-      {/* Particle cursor */}
-      <motion.div
-        className="fixed w-4 h-4 bg-[#00f7ff] rounded-full pointer-events-none z-50"
-        style={{
-          x: smoothX,
-          y: smoothY,
-          boxShadow: '0 0 20px #00f7ff'
-        }}
       />
 
       {/* Main content */}
