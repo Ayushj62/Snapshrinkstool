@@ -5,8 +5,6 @@ import { PDFDocument } from 'pdf-lib';
 import { saveAs } from 'file-saver';
 import { FiUpload, FiDownload, FiFile, FiZap } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
-import DataConsentDialog from '../components/DataConsentDialog';
-import { collectUserData } from '../services/dataCollection';
 
 // Maximum file size for processing: 50MB
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
@@ -20,7 +18,6 @@ const PdfCompressor = () => {
   const [compressionLevel, setCompressionLevel] = useState<'low' | 'medium' | 'high'>('medium');
   const [originalSize, setOriginalSize] = useState<number>(0);
   const [compressedSize, setCompressedSize] = useState<number>(0);
-  const [showConsentDialog, setShowConsentDialog] = useState<boolean>(false);
 
   // Clean up any blob URLs when component unmounts
   useEffect(() => {
@@ -58,21 +55,7 @@ const PdfCompressor = () => {
     
     setPdfFile(file);
     setOriginalSize(file.size);
-    setShowConsentDialog(true);
   }, []);
-
-  // Handle consent
-  const handleConsent = (accepted: boolean) => {
-    if (accepted && pdfFile) {
-      collectUserData({
-        fileName: pdfFile.name,
-        fileType: pdfFile.type,
-        fileSize: pdfFile.size,
-        toolUsed: 'pdf-compressor'
-      }, true);
-    }
-    setShowConsentDialog(false);
-  };
   
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -228,13 +211,7 @@ const PdfCompressor = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
       className="container-custom py-10"
-    >
-      <DataConsentDialog
-        isOpen={showConsentDialog}
-        onAccept={() => handleConsent(true)}
-        onDecline={() => handleConsent(false)}
-      />
-      
+    >      
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold mb-4">PDF Compressor</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">

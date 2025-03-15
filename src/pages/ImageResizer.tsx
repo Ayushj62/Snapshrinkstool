@@ -255,11 +255,8 @@ const ImageResizer = () => {
                 Supported formats: JPG, PNG, WebP
               </p>
               <p className="text-xs text-gray-400 mt-2">
-                By uploading a file, you agree to our{' '}
-                <Link to="/privacy-policy" className="text-primary-600 hover:text-primary-700">
-                  Privacy Policy
-                </Link>
-                {' '}regarding data collection and processing.
+                All image processing is done in your browser. Your files are never uploaded to our servers.
+                See our <Link to="/privacy-policy" className="text-primary-600 hover:text-primary-700">Privacy Policy</Link> for details.
               </p>
             </div>
           ) : (
