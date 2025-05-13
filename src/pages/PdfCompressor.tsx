@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { PDFDocument } from 'pdf-lib';
 import { saveAs } from 'file-saver';
 import { FiUpload, FiDownload, FiFile, FiZap } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
 
 // Maximum file size for processing: 50MB
 const MAX_FILE_SIZE = 50 * 1024 * 1024;

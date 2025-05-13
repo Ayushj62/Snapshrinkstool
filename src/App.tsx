@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Routes, Route, useLocation, HashRouter } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { Routes, Route } from 'react-router-dom';
 
 // Components
 import Navbar from './components/Navbar';
@@ -11,7 +10,6 @@ import LoadingScreen from './components/LoadingScreen';
 import HomePage from './pages/HomePage';
 import ImageBgRemover from './pages/ImageBgRemover';
 import JpgToPdf from './pages/JpgToPdf';
-import PdfMerger from './pages/PdfMerger';
 import PdfCompressor from './pages/PdfCompressor';
 import ImageResizer from './pages/ImageResizer';
 import Contact from './pages/Contact';
@@ -55,25 +53,23 @@ const App: React.FC = () => {
 
       {/* Main application content */}
       <div className="app-container min-h-screen flex flex-col">
-        <HashRouter>
-          <Navbar />
-          <main className="flex-grow">
-            {/* Only render the main content when loading is complete */}
-            {!isLoading && (
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/image-resizer" element={<ImageResizer />} />
-                <Route path="/image-bg-remover" element={<ImageBgRemover />} />
-                <Route path="/jpg-to-pdf" element={<JpgToPdf />} />
-                <Route path="/pdf-compressor" element={<PdfCompressor />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            )}
-          </main>
-          <Footer />
-        </HashRouter>
+        <Navbar />
+        <main className="flex-grow">
+          {/* Only render the main content when loading is complete */}
+          {!isLoading && (
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/image-resizer" element={<ImageResizer />} />
+              <Route path="/image-bg-remover" element={<ImageBgRemover />} />
+              <Route path="/jpg-to-pdf" element={<JpgToPdf />} />
+              <Route path="/pdf-compressor" element={<PdfCompressor />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          )}
+        </main>
+        <Footer />
       </div>
     </>
   );

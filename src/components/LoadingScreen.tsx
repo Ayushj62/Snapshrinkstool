@@ -5,13 +5,11 @@ import gsap from 'gsap';
 
 interface LoadingScreenProps {
   isLoading: boolean;
-  progress?: number;
   onLoadingComplete?: () => void;
 }
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
   isLoading, 
-  progress = 0, 
   onLoadingComplete 
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
