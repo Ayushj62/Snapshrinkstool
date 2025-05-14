@@ -1,11 +1,5 @@
 # 🖼️ SnapShrinksTool
 
-<div align="center">
-  [![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-green)](https://opensource.org/licenses/MIT)
-</div>
 
 > **SnapShrinksTool** is a **modern, client‑side** toolkit for **image & PDF manipulation**—no uploads, zero compromises. All processing happens **locally in your browser** 🛡️.
 
@@ -24,15 +18,6 @@
 ---
 
 ## 🧰 Technology Stack
-
-<div align="center">
-  ![React](https://img.shields.io/badge/-React-61DAFB?style=for-the-badge&logo=react)
-  ![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?style=for-the-badge&logo=typescript)
-  ![Tailwind](https://img.shields.io/badge/-TailwindCSS-06B6D4?style=for-the-badge&logo=tailwind-css)
-  ![PDF-Lib](https://img.shields.io/badge/-PDF--Lib-FF0000?style=for-the-badge)
-  ![Framer Motion](https://img.shields.io/badge/-Framer_Motion-B58BF5?style=for-the-badge)
-  ![Browser-Image-Compression](https://img.shields.io/badge/-Browser--Image--Compression-00D1B2?style=for-the-badge)
-</div>
 
 * **Framework**: React + TypeScript
 * **Styling**: Tailwind CSS + optional Bootstrap utilities
